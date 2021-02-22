@@ -12,16 +12,33 @@ import com.bumptech.glide.request.RequestOptions
 class PartyAdapter(val alpacapartier : List<AlpacaParty>) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     override fun getItemCount(): Int {
-        return alpacapartier.size
+        //return alpacapartier.size
+        var total = 0
+        for(i in alpacapartier){
+            for(j in i.parties!!){
+                total ++
+            }
+        }
+        return total
     }
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         when(holder){
             is PartyAdapter ->{
-                /*for(i in alpacapartier){
-                    holder.ordne(i.get(position))
+                //var total = 0
+                for(i in alpacapartier){
+                    i.parties?.let { holder.bind(it[position]) }
+                }
+                /*for(i in alpacapartier) {
+                    while(total < i.parties?.size!!){
+                        i.parties.getOrNull(total)?.let { holder.bind(it) }
+                        total++
+                    }
+                    /*for (j in i.parties!!) {
+                        holder.bind(j)
+                    }*/
+                    total = 0
                 }*/
-                holder.ordne(alpacapartier.get(position))
             }
         }
     }
@@ -32,12 +49,30 @@ class PartyAdapter(val alpacapartier : List<AlpacaParty>) : RecyclerView.Adapter
     }
 
     inner class PartyAdapter(itemView: View) : RecyclerView.ViewHolder(itemView){
+
+        //val liste = alpacapartier
         val alpacaBilde = itemView.findViewById<de.hdodenhof.circleimageview.CircleImageView>(R.id.image)
         val alpacaNavn = itemView.findViewById<TextView>(R.id.navn)
         val alpacaLag = itemView.findViewById<TextView>(R.id.lag)
         val farge = itemView.findViewById<View>(R.id.farge)
 
-        fun ordne(nyalp : AlpacaParty){
+        fun bind(nyalp : Alpaca){
+            alpacaNavn.text = nyalp.leader
+            alpacaLag.text = nyalp.name
+            farge.setBackgroundColor(Color.parseColor(nyalp.color))
+            val requestOptions = RequestOptions()
+                    .placeholder(R.drawable.ic_launcher_background)
+                    .error(R.drawable.ic_launcher_background)
+
+            Glide.with(itemView.context).applyDefaultRequestOptions(requestOptions).load(nyalp.img).into(alpacaBilde)
+        }
+        /*
+        val alpacaBilde = itemView.findViewById<de.hdodenhof.circleimageview.CircleImageView>(R.id.image)
+        val alpacaNavn = itemView.findViewById<TextView>(R.id.navn)
+        val alpacaLag = itemView.findViewById<TextView>(R.id.lag)
+        val farge = itemView.findViewById<View>(R.id.farge)
+
+        fun bind(nyalp : AlpacaParty){
             for(i in nyalp.parties.orEmpty()){
                 alpacaNavn.setText(i.leader)
                 alpacaLag.setText(i.name)
@@ -52,5 +87,6 @@ class PartyAdapter(val alpacapartier : List<AlpacaParty>) : RecyclerView.Adapter
                 into(alpacaBilde)
             }
         }
+         */
     }
 }

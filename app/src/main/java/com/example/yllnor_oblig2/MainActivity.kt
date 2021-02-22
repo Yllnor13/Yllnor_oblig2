@@ -21,6 +21,7 @@ class MainActivity : AppCompatActivity() {
         val gson = Gson()
         var adapter : PartyAdapter
         val recycler = findViewById<RecyclerView>(R.id.recyclerview)
+        var respons : AlpacaParty
 
         /*runBlocking {
             try {
@@ -35,25 +36,28 @@ class MainActivity : AppCompatActivity() {
             }
         }*/
         CoroutineScope(newSingleThreadContext("henter")).launch(Dispatchers.IO){
-            try {
-                //println(Fuel.get(path).awaitString()) // "{"origin":"127.0.0.1"}"
-                val respons = gson.fromJson(Fuel.get(path).awaitString(), AlpacaParty::class.java)
-                /*for (i in 0 until respons.size){
-                    print(respons[i].name)
-                }*/
-                //Log.d("API fetching", respons.toString())
-                alpacapartyListe.add(respons)
-                Log.d("liste test", alpacapartyListe.toString())
-
-                recycler.apply{
-                    recycler.layoutManager = LinearLayoutManager(this@MainActivity)
-                    adapter = PartyAdapter(alpacapartyListe)
-                    recycler.adapter = adapter
+            var apiCall = async{
+                try{
+                    //println(Fuel.get(path).awaitString()) // "{"origin":"127.0.0.1"}"
+                    respons = gson.fromJson(Fuel.get(path).awaitString(), AlpacaParty::class.java)
+                    /*for (i in 0 until respons.size){
+                        print(respons[i].name)
+                    }*/
+                    //Log.d("API fetching", respons.toString())
+                    return@async respons
+                } catch(exception: Exception) {
+                    println("A network request exception was thrown: ${exception.message}")
                 }
-            } catch(exception: Exception) {
-                println("A network request exception was thrown: ${exception.message}")
+            }
+            respons = apiCall.await() as AlpacaParty
+            alpacapartyListe.add(respons)
+            recycler.apply{
+                recycler.layoutManager = LinearLayoutManager(this@MainActivity)
+                adapter = PartyAdapter(alpacapartyListe)
+                recycler.adapter = adapter
             }
         }
+        Log.d("liste test", alpacapartyListe.toString())
     }
 }
 
