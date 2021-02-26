@@ -8,8 +8,9 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
+import de.hdodenhof.circleimageview.CircleImageView
 
-class PartyAdapter(val alpacapartier : List<AlpacaParty>) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+class PartyAdapter(private val alpacapartier : List<AlpacaParty>) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     override fun getItemCount(): Int {
         //return alpacapartier.size
@@ -29,16 +30,6 @@ class PartyAdapter(val alpacapartier : List<AlpacaParty>) : RecyclerView.Adapter
                 for(i in alpacapartier){ //gaar gjennom hver alpakaparty i lista og bruker adapater for aa sette informasjonen i kort
                     i.parties?.let { holder.bind(it[position]) }
                 }
-                /*for(i in alpacapartier) {
-                    while(total < i.parties?.size!!){
-                        i.parties.getOrNull(total)?.let { holder.bind(it) }
-                        total++
-                    }
-                    /*for (j in i.parties!!) {
-                        holder.bind(j)
-                    }*/
-                    total = 0
-                }*/
             }
         }
     }
@@ -49,13 +40,11 @@ class PartyAdapter(val alpacapartier : List<AlpacaParty>) : RecyclerView.Adapter
     }
 
     inner class PartyAdapter(itemView: View) : RecyclerView.ViewHolder(itemView){
-
-        //val liste = alpacapartier
-        val alpacaBilde = itemView.findViewById<de.hdodenhof.circleimageview.CircleImageView>(R.id.image)  //lagrer viewene i kortet
-        val alpacaNavn = itemView.findViewById<TextView>(R.id.navn)
-        val alpacaLag = itemView.findViewById<TextView>(R.id.lag)
-        val farge = itemView.findViewById<View>(R.id.farge)
-        val stemmer = itemView.findViewById<TextView>(R.id.stemmer)
+        private val alpacaBilde: CircleImageView = itemView.findViewById(R.id.image)  //lagrer viewene i kortet
+        private val alpacaNavn: TextView = itemView.findViewById(R.id.navn)
+        private val alpacaLag: TextView = itemView.findViewById(R.id.lag)
+        private val farge: View = itemView.findViewById(R.id.farge)
+        private val stemmer: TextView = itemView.findViewById(R.id.stemmer)
 
         fun bind(nyalp : Alpaca){  //naar den faar alpakka objekt saa vil den fordele verdiene til viewene som tilhoerer den
             alpacaNavn.text = nyalp.leader
@@ -68,27 +57,5 @@ class PartyAdapter(val alpacapartier : List<AlpacaParty>) : RecyclerView.Adapter
 
             Glide.with(itemView.context).applyDefaultRequestOptions(requestOptions).load(nyalp.img).into(alpacaBilde) //henter bildet fra nettet
         }
-        /*
-        val alpacaBilde = itemView.findViewById<de.hdodenhof.circleimageview.CircleImageView>(R.id.image)
-        val alpacaNavn = itemView.findViewById<TextView>(R.id.navn)
-        val alpacaLag = itemView.findViewById<TextView>(R.id.lag)
-        val farge = itemView.findViewById<View>(R.id.farge)
-
-        fun bind(nyalp : AlpacaParty){
-            for(i in nyalp.parties.orEmpty()){
-                alpacaNavn.setText(i.leader)
-                alpacaLag.setText(i.name)
-                farge.setBackgroundColor(Color.parseColor(i.color))
-                val requestOptions = RequestOptions()
-                    .placeholder(R.drawable.ic_launcher_background)
-                    .error(R.drawable.ic_launcher_background)
-
-                Glide.with(itemView.context).
-                applyDefaultRequestOptions(requestOptions).
-                load(i.img).
-                into(alpacaBilde)
-            }
-        }
-         */
     }
 }

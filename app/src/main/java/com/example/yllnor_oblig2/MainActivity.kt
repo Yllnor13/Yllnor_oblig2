@@ -1,23 +1,18 @@
 package com.example.yllnor_oblig2
 
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Spinner
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.github.kittinunf.fuel.Fuel
-import com.github.kittinunf.fuel.core.Headers
 import com.github.kittinunf.fuel.coroutines.awaitString
 import com.google.gson.Gson
 import kotlinx.coroutines.*
-import java.io.ByteArrayInputStream
-import java.io.InputStream
-import javax.sql.DataSource
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -34,9 +29,50 @@ class MainActivity : AppCompatActivity() {
         val recycler = findViewById<RecyclerView>(R.id.recyclerview)
         var respons : AlpacaParty
         val spinner = findViewById<Spinner>(R.id.spinner)
-        var valget = ""
+        var valget: String
         val valg = resources.getStringArray(R.array.valg)
         //var stemmer : MutableList<Int>
+
+        fun settInn(a : MutableList<AlpacaParty>, s : MutableList<Int>, t : Int){ //lagde metode istedenfor aa bruke samme kode 2 ganger
+            var pos = 0 //gaar gjennom alpakaparti lista og fordeler stemmer + % av helheten de fikk, som over
+            for(i in a){
+                for (j in i.parties!!){
+                    var prosent = (s[pos].toDouble() / t) * 100
+                    prosent = String.format("%.2f", prosent).toDouble()
+                    j.stemme = s[pos].toString() + " stemmer, " + prosent.toString() + "% av totalen"
+                    pos++
+                }
+            }
+            recycler.apply{ //oppdaterer recycler viewet
+                recycler.layoutManager = LinearLayoutManager(this@MainActivity)
+                adapter = PartyAdapter(alpacapartyListe)
+                recycler.adapter = adapter
+            }
+        }
+
+        fun settInnStemmer(idListe : List<Id>) : MutableList<Int>{
+            var id1 = 0//variabler for aa vite hvor mange stemmer det er
+            var id2 = 0
+            var id3 = 0
+            var id4 = 0
+            for(i in idListe){ //fordeler stemmer
+                when(i.id){
+                    "1" -> {
+                        id1++
+                    }
+                    "2" -> {
+                        id2++
+                    }
+                    "3" -> {
+                        id3++
+                    }
+                    "4" -> {
+                        id4++
+                    }
+                }
+            }
+            return mutableListOf<Int>(id1, id2, id3, id4)
+        }
 
         ArrayAdapter.createFromResource(this, R.array.valg, android.R.layout.simple_spinner_item). also { adapter ->
             adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item) //setter items i resources inn i spinneren
@@ -49,52 +85,16 @@ class MainActivity : AppCompatActivity() {
                 when(valget){
                     "valgdistrikt 1" ->{ //dersom man velger foerste posisjon
                         CoroutineScope(newSingleThreadContext("valgdistrikt1")).launch(Dispatchers.Main){
-                            var hentvalgdistrikt = async{
+                            async{
                                 try{
                                     //println(Fuel.get(valg1).awaitString()) // "{"origin":"127.0.0.1"}"
                                     val mlid : List<Id> = gson.fromJson(Fuel.get(valg1).awaitString(), Array<Id>::class.java).toList()//henter json og gjoer det om til objekter som er satt i liste
-                                    //Log.d("ListePrint", mlid.toString()) //sjekker om det funket
-                                    var id1 = 0//variabler for aa vite hvor mange stemmer det er
-                                    var id2 = 0
-                                    var id3 = 0
-                                    var id4 = 0
-                                    for(i in mlid){ //fordeler stemmer
-                                        when(i.id){
-                                            "1" -> {
-                                                id1++
-                                            }
-                                            "2" -> {
-                                                id2++
-                                            }
-                                            "3" -> {
-                                                id3++
-                                            }
-                                            "4" -> {
-                                                id4++
-                                            }
-                                        }
-                                    }
-                                    //Log.d("id1 total", id1.toString())
-                                    //Log.d("id2 total", id2.toString())
-                                    //Log.d("id3 total", id3.toString())
-                                    //Log.d("id4 total", id4.toString()) //sjekker om den tellte alt riktig
-                                    var stemmer = mutableListOf<Int>(id1, id2, id3, id4)
+
+                                    val stemmer = settInnStemmer(mlid)
                                     val totalmengdestemmer = stemmer.sum() //finner total mengden av stemmer for a regne ut prosent
 
-                                    var pos = 0
-                                    for(i in alpacapartyListe){//fordeler stemmene til hver alpakaparti (la til enda en val i dataklassen for aa faa til dette
-                                        for (j in i.parties!!){
-                                            var prosent = (stemmer[pos].toDouble() / totalmengdestemmer) * 100
-                                            prosent = String.format("%.2f", prosent).toDouble()
-                                            j.stemme = stemmer[pos].toString() + " stemmer, " + prosent.toString() + "% av totalen"
-                                            pos++
-                                        }
-                                    }
-                                    recycler.apply{ //oppdaterer recyclerviewet med ny informasjon
-                                        recycler.layoutManager = LinearLayoutManager(this@MainActivity)
-                                        adapter = PartyAdapter(alpacapartyListe)
-                                        recycler.adapter = adapter
-                                    }
+
+                                    settInn(alpacapartyListe, stemmer, totalmengdestemmer)
                                 } catch(exception: Exception) {
                                     println("A network request exception was thrown: ${exception.message}")
                                 }
@@ -104,52 +104,15 @@ class MainActivity : AppCompatActivity() {
                     }
                     "valgdistrikt 2" ->{
                         CoroutineScope(newSingleThreadContext("valgdistrikt2")).launch(Dispatchers.Main){ //gjoer det samme som "valgdistrikt 1"
-                            var hentvalgdistrikt = async{
+                            async{
                                 try{
                                     //println(Fuel.get(valg2).awaitString()) // "{"origin":"127.0.0.1"}"
                                     val mlid : List<Id> = gson.fromJson(Fuel.get(valg2).awaitString(), Array<Id>::class.java).toList()
-                                    Log.d("ListePrint", mlid.toString())
-                                    var id1 = 0
-                                    var id2 = 0
-                                    var id3 = 0
-                                    var id4 = 0
-                                    for(i in mlid){
-                                        when(i.id){
-                                            "1" -> {
-                                                id1++
-                                            }
-                                            "2" -> {
-                                                id2++
-                                            }
-                                            "3" -> {
-                                                id3++
-                                            }
-                                            "4" -> {
-                                                id4++
-                                            }
-                                        }
-                                    }
-                                    Log.d("id1 total", id1.toString())
-                                    Log.d("id2 total", id2.toString())
-                                    Log.d("id3 total", id3.toString())
-                                    Log.d("id4 total", id4.toString())
-                                    var stemmer = mutableListOf<Int>(id1, id2, id3, id4)
+
+                                    val stemmer = settInnStemmer(mlid)
                                     val totalmengdestemmer = stemmer.sum()
 
-                                    var pos = 0
-                                    for(i in alpacapartyListe){
-                                        for (j in i.parties!!){
-                                            var prosent = (stemmer[pos].toDouble() / totalmengdestemmer) * 100
-                                            prosent = String.format("%.2f", prosent).toDouble()
-                                            j.stemme = stemmer[pos].toString() + " stemmer, " + prosent.toString() + "% av totalen"
-                                            pos++
-                                        }
-                                    }
-                                    recycler.apply{
-                                        recycler.layoutManager = LinearLayoutManager(this@MainActivity)
-                                        adapter = PartyAdapter(alpacapartyListe)
-                                        recycler.adapter = adapter
-                                    }
+                                    settInn(alpacapartyListe, stemmer, totalmengdestemmer)
                                 } catch(exception: Exception) {
                                     println("A network request exception was thrown: ${exception.message}")
                                 }
@@ -159,7 +122,7 @@ class MainActivity : AppCompatActivity() {
                     }
                     "valgdistrikt 3" ->{
                         CoroutineScope(newSingleThreadContext("valgdistrikt2")).launch(Dispatchers.Main){ //henter inn xml og lager objekter via xml parser
-                            var hentvalgdistrikt = async{
+                            async{
                                 try{
                                     val xml = Fuel.get(valg3).awaitString()
                                     //Log.d("ListePrint xml", xml.toString()) //sjekket om det funket
@@ -191,23 +154,10 @@ class MainActivity : AppCompatActivity() {
                                     //Log.d("id2 total", id2.toString())
                                     //Log.d("id3 total", id3.toString())
                                     //Log.d("id4 total", id4.toString())
-                                    var stemmer = mutableListOf<Int>(id1, id2, id3, id4)
+                                    val stemmer = mutableListOf(id1, id2, id3, id4)
                                     val totalmengdestemmer = stemmer.sum()
 
-                                    var pos = 0 //gaar gjennom alpakaparti lista og fordeler stemmer + % av helheten de fikk, som over
-                                    for(i in alpacapartyListe){
-                                        for (j in i.parties!!){
-                                            var prosent = (stemmer[pos].toDouble() / totalmengdestemmer) * 100
-                                            prosent = String.format("%.2f", prosent).toDouble()
-                                            j.stemme = stemmer[pos].toString() + " stemmer, " + prosent.toString() + "% av totalen"
-                                            pos++
-                                        }
-                                    }
-                                    recycler.apply{ //oppdaterer recycler viewet
-                                        recycler.layoutManager = LinearLayoutManager(this@MainActivity)
-                                        adapter = PartyAdapter(alpacapartyListe)
-                                        recycler.adapter = adapter
-                                    }
+                                    settInn(alpacapartyListe, stemmer, totalmengdestemmer)
                                 } catch(exception: Exception) {
                                     println("A network request exception was thrown: ${exception.message}")
                                 }
@@ -223,20 +173,9 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        /*runBlocking {
-            try {
-                println(Fuel.get(path).awaitString()) // "{"origin":"127.0.0.1"}"
-                val respons = gson.fromJson(Fuel.get(path).awaitString(), AlpacaParty::class.java)
-                /*for (i in 0 until respons.size){
-                    print(respons[i].name)
-                }*/
-                Log.d("API fetching", respons.toString())
-            } catch(exception: Exception) {
-                println("A network request exception was thrown: ${exception.message}")
-            }
-        }*/
+
         CoroutineScope(newSingleThreadContext("henter")).launch(Dispatchers.IO){ //dette er for aa sette opp lista i begynnelsen
-            var apiCall = async{
+            val apiCall = async{
                 try{
                     //println(Fuel.get(path).awaitString()) // "{"origin":"127.0.0.1"}"
                     respons = gson.fromJson(Fuel.get(path).awaitString(), AlpacaParty::class.java)
