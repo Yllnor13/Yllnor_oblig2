@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">Yllnor_oblig2</string>
+    <string-array name="valg">
+        <item>valgdistrikt 1</item>
+        <item>valgdistrikt 2</item>
+        <item>valgdistrikt 3</item>
+    </string-array>
 </resources>
