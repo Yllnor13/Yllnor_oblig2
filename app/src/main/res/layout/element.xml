@@ -9,6 +9,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="24dp"
+        card_view:cardBackgroundColor="@color/darkgray"
         card_view:cardCornerRadius="4dp"
         card_view:cardElevation="10dp"
         card_view:cardUseCompatPadding="true">
@@ -25,10 +26,12 @@
             android:id="@+id/lag"
             android:layout_width="match_parent"
             android:layout_height="40dp"
+            android:background="@color/darkgray"
             android:layout_marginStart="10dp"
             android:layout_marginTop="60dp"
             android:layout_marginEnd="10dp"
             android:textAlignment="center"
+            android:textColor="@color/white"
             android:textSize="18sp" />
 
         <de.hdodenhof.circleimageview.CircleImageView
@@ -44,22 +47,26 @@
 
         <TextView
             android:id="@+id/navn"
+            android:background="@color/darkgray"
             android:layout_width="match_parent"
             android:layout_height="40dp"
             android:layout_marginStart="10dp"
             android:layout_marginTop="340dp"
             android:layout_marginEnd="10dp"
             android:textAlignment="center"
+            android:textColor="@color/white"
             android:textSize="18sp" />
 
         <TextView
             android:id="@+id/stemmer"
+            android:background="@color/darkgray"
             android:layout_width="match_parent"
             android:layout_height="40dp"
             android:layout_marginStart="10dp"
             android:layout_marginTop="400dp"
             android:layout_marginEnd="10dp"
             android:textAlignment="center"
+            android:textColor="@color/white"
             android:textSize="18sp" />
 
     </androidx.cardview.widget.CardView>

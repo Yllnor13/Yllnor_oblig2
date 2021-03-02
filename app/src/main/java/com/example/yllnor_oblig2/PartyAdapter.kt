@@ -50,7 +50,7 @@ class PartyAdapter(private val alpacapartier : List<AlpacaParty>) : RecyclerView
             alpacaNavn.text = nyalp.leader
             alpacaLag.text = nyalp.name
             farge.setBackgroundColor(Color.parseColor(nyalp.color))
-            stemmer.text = nyalp.stemme
+            stemmer.text = nyalp.stemmetekst
             val requestOptions = RequestOptions()
                     .placeholder(R.drawable.ic_launcher_background)
                     .error(R.drawable.ic_launcher_background)

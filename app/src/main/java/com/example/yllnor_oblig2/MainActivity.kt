@@ -1,6 +1,7 @@
 package com.example.yllnor_oblig2
 
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
@@ -39,39 +40,41 @@ class MainActivity : AppCompatActivity() {
                 for (j in i.parties!!){
                     var prosent = (s[pos].toDouble() / t) * 100
                     prosent = String.format("%.2f", prosent).toDouble()
-                    j.stemme = s[pos].toString() + " stemmer, " + prosent.toString() + "% av totalen"
+                    j.stemmetekst = s[pos].toString() + " stemmer, " + prosent.toString() + "% av totalen"
                     pos++
                 }
             }
-            recycler.apply{ //oppdaterer recycler viewet
-                recycler.layoutManager = LinearLayoutManager(this@MainActivity)
-                adapter = PartyAdapter(alpacapartyListe)
-                recycler.adapter = adapter
+            runOnUiThread{
+                recycler.apply{ //oppdaterer recycler viewet
+                    recycler.layoutManager = LinearLayoutManager(this@MainActivity)
+                    adapter = PartyAdapter(alpacapartyListe)
+                    recycler.adapter = adapter
+                }
             }
         }
 
-        fun settInnStemmer(idListe : List<Id>) : MutableList<Int>{
-            var id1 = 0//variabler for aa vite hvor mange stemmer det er
-            var id2 = 0
-            var id3 = 0
-            var id4 = 0
-            for(i in idListe){ //fordeler stemmer
-                when(i.id){
-                    "1" -> {
-                        id1++
-                    }
-                    "2" -> {
-                        id2++
-                    }
-                    "3" -> {
-                        id3++
-                    }
-                    "4" -> {
-                        id4++
+        fun settInnStemmer(idListe : List<Id>, a : MutableList<AlpacaParty>) : MutableList<Int>{
+            var stemmetall : Int
+            for(i in a){
+                for(j in i.parties!!){
+                    stemmetall = 0
+                    for(k in idListe){ //fordeler stemmer
+                        if(k.id == j.id){
+                            stemmetall++
+                            j.stemme = stemmetall
+                        }
                     }
                 }
             }
-            return mutableListOf<Int>(id1, id2, id3, id4)
+
+            var stemmeliste = mutableListOf<Int>()
+
+            for(i in a) {
+                for (j in i.parties!!) {
+                    stemmeliste.add(j.stemme!!)
+                }
+            }
+            return stemmeliste
         }
 
         ArrayAdapter.createFromResource(this, R.array.valg, android.R.layout.simple_spinner_item). also { adapter ->
@@ -84,44 +87,46 @@ class MainActivity : AppCompatActivity() {
                 valget = valg[position] //gjoer valget om til det som er valgt på spinneren
                 when(valget){
                     "valgdistrikt 1" ->{ //dersom man velger foerste posisjon
-                        CoroutineScope(newSingleThreadContext("valgdistrikt1")).launch(Dispatchers.Main){
-                            async{
-                                try{
-                                    //println(Fuel.get(valg1).awaitString()) // "{"origin":"127.0.0.1"}"
-                                    val mlid : List<Id> = gson.fromJson(Fuel.get(valg1).awaitString(), Array<Id>::class.java).toList()//henter json og gjoer det om til objekter som er satt i liste
+                        CoroutineScope(newSingleThreadContext("valgdistrikt1")).launch(Dispatchers.IO){
+                            try{
+                                //println(Fuel.get(valg1).awaitString()) // "{"origin":"127.0.0.1"}"
+                                val mlid : List<Id> = gson.fromJson(Fuel.get(valg1).awaitString(), Array<Id>::class.java).toList()//henter json og gjoer det om til objekter som er satt i liste
 
-                                    val stemmer = settInnStemmer(mlid)
-                                    val totalmengdestemmer = stemmer.sum() //finner total mengden av stemmer for a regne ut prosent
+                                val stemmer = settInnStemmer(mlid, alpacapartyListe)
+                                val totalmengdestemmer = stemmer.sum() //finner total mengden av stemmer for a regne ut prosent
+                                Log.d("valgdistrikt 1 a", alpacapartyListe.toString())
+                                Log.d("valgdistrikt 1 s", stemmer.toString())
+                                Log.d("valgdistrikt 1 t", totalmengdestemmer.toString())
 
+                                settInn(alpacapartyListe, stemmer, totalmengdestemmer)
+                                CoroutineScope(newSingleThreadContext("valgdistrikt1")).launch(Dispatchers.IO){
 
-                                    settInn(alpacapartyListe, stemmer, totalmengdestemmer)
-                                } catch(exception: Exception) {
-                                    println("A network request exception was thrown: ${exception.message}")
                                 }
+                            } catch(exception: Exception) {
+                                println("A network request exception was thrown: ${exception.message}")
                             }
-                            //valgdistrikt = hentvalgdistrikt.await()
                         }
                     }
                     "valgdistrikt 2" ->{
-                        CoroutineScope(newSingleThreadContext("valgdistrikt2")).launch(Dispatchers.Main){ //gjoer det samme som "valgdistrikt 1"
-                            async{
-                                try{
-                                    //println(Fuel.get(valg2).awaitString()) // "{"origin":"127.0.0.1"}"
-                                    val mlid : List<Id> = gson.fromJson(Fuel.get(valg2).awaitString(), Array<Id>::class.java).toList()
+                        CoroutineScope(newSingleThreadContext("valgdistrikt2")).launch(Dispatchers.IO){ //gjoer det samme som "valgdistrikt 1"
+                            try{
+                                //println(Fuel.get(valg2).awaitString()) // "{"origin":"127.0.0.1"}"
+                                val mlid : List<Id> = gson.fromJson(Fuel.get(valg2).awaitString(), Array<Id>::class.java).toList()
 
-                                    val stemmer = settInnStemmer(mlid)
-                                    val totalmengdestemmer = stemmer.sum()
-
-                                    settInn(alpacapartyListe, stemmer, totalmengdestemmer)
-                                } catch(exception: Exception) {
-                                    println("A network request exception was thrown: ${exception.message}")
-                                }
+                                val stemmer = settInnStemmer(mlid, alpacapartyListe)
+                                val totalmengdestemmer = stemmer.sum()
+                                Log.d("valgdistrikt 2 a", alpacapartyListe.toString())
+                                Log.d("valgdistrikt 2 s", stemmer.toString())
+                                Log.d("valgdistrikt 2 t", totalmengdestemmer.toString())
+                                settInn(alpacapartyListe, stemmer, totalmengdestemmer)
+                            } catch(exception: Exception) {
+                                println("A network request exception was thrown: ${exception.message}")
                             }
-                            //valgdistriktListe = hentvalgdistrikt.await()
                         }
+                        //valgdistriktListe = hentvalgdistrikt.await()
                     }
                     "valgdistrikt 3" ->{
-                        CoroutineScope(newSingleThreadContext("valgdistrikt2")).launch(Dispatchers.Main){ //henter inn xml og lager objekter via xml parser
+                        CoroutineScope(newSingleThreadContext("valgdistrikt2")).launch(Dispatchers.IO){ //henter inn xml og lager objekter via xml parser
                             async{
                                 try{
                                     val xml = Fuel.get(valg3).awaitString()
@@ -130,23 +135,15 @@ class MainActivity : AppCompatActivity() {
                                     //Log.d("ListePrint inputstream", inputStream.toString())
                                     val listOfParties = XmlParser().parse(inputStream) //parser informasjonen og faar tilbake liste med partier og hvor mange stemmer de fikk
                                     //Log.d("party objekter liste", listOfParties.toString())
-                                    var id1 = 0
-                                    var id2 = 0
-                                    var id3 = 0
-                                    var id4 = 0
-                                    for(i in listOfParties){ //fordeler stemmene til variabler som teller stemmer
-                                        when(i.id){
-                                            "1" -> {
-                                                id1 = i.votes!!
-                                            }
-                                            "2" -> {
-                                                id2 = i.votes!!
-                                            }
-                                            "3" -> {
-                                                id3 = i.votes!!
-                                            }
-                                            "4" -> {
-                                                id4 = i.votes!!
+                                    var stemmer = mutableListOf<Int>()
+                                    var stemmetall : Int
+                                    for(i in alpacapartyListe){
+                                        for(j in i.parties!!){
+                                            for(k in listOfParties){ //fordeler stemmer
+                                                if(k.id == j.id){
+                                                    j.stemme = k.votes
+                                                    k.votes?.let { stemmer.add(it) }
+                                                }
                                             }
                                         }
                                     }
@@ -154,9 +151,10 @@ class MainActivity : AppCompatActivity() {
                                     //Log.d("id2 total", id2.toString())
                                     //Log.d("id3 total", id3.toString())
                                     //Log.d("id4 total", id4.toString())
-                                    val stemmer = mutableListOf(id1, id2, id3, id4)
                                     val totalmengdestemmer = stemmer.sum()
-
+                                    Log.d("valgdistrikt 3 a", alpacapartyListe.toString())
+                                    Log.d("valgdistrikt 3 s", stemmer.toString())
+                                    Log.d("valgdistrikt 3 t", totalmengdestemmer.toString())
                                     settInn(alpacapartyListe, stemmer, totalmengdestemmer)
                                 } catch(exception: Exception) {
                                     println("A network request exception was thrown: ${exception.message}")
@@ -190,6 +188,7 @@ class MainActivity : AppCompatActivity() {
             }
             respons = apiCall.await() as AlpacaParty
             alpacapartyListe.add(respons)
+            Log.d("coroutine main", alpacapartyListe.toString())
             recycler.apply{
                 recycler.layoutManager = LinearLayoutManager(this@MainActivity)
                 adapter = PartyAdapter(alpacapartyListe)
